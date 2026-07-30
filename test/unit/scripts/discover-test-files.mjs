@@ -67,6 +67,18 @@ export function getVitestTests( rootDir, manifest ) {
 	].sort();
 }
 
+export function canonicalizeRenamedTestFiles( testFiles, renamedTests ) {
+	const currentToBaseline = new Map(
+		Object.entries( renamedTests ).map(
+			( [ baselinePath, currentPath ] ) => [ currentPath, baselinePath ]
+		)
+	);
+
+	return testFiles
+		.map( ( testPath ) => currentToBaseline.get( testPath ) ?? testPath )
+		.sort();
+}
+
 export function hashTestFiles( testFiles ) {
 	return createHash( 'sha256' )
 		.update( [ ...testFiles ].sort().join( '\n' ) )

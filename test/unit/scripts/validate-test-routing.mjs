@@ -17,6 +17,7 @@ import globPackage from 'glob';
  * Internal dependencies
  */
 import {
+	canonicalizeRenamedTestFiles,
 	discoverTestFiles,
 	getVitestTests,
 	hashTestFiles,
@@ -115,12 +116,17 @@ const addedJestTests = manifest.added.jest;
 const addedVitestTests = manifest.added.vitest;
 const addedTests = [ ...addedJestTests, ...addedVitestTests ];
 const retiredTests = manifest.retired;
+const renamedTests = manifest.renamed;
+const renamedBaselineTests = Object.keys( renamedTests );
+const renamedCurrentTests = Object.values( renamedTests );
 const migratedTestFiles = manifest.vitest.files;
 const migratedDirectories = manifest.vitest.directories;
 
 assertUniquePaths( 'added.jest', addedJestTests );
 assertUniquePaths( 'added.vitest', addedVitestTests );
 assertUniquePaths( 'retired', retiredTests );
+assertUniquePaths( 'renamed baseline paths', renamedBaselineTests );
+assertUniquePaths( 'renamed current paths', renamedCurrentTests );
 assertUniquePaths( 'vitest.files', migratedTestFiles );
 assertUniquePaths( 'vitest.directories', migratedDirectories );
 
@@ -133,6 +139,27 @@ assert.deepEqual(
 	duplicateManifestEntries,
 	[],
 	`Migration manifest entries must be disjoint:\n${ duplicateManifestEntries.join(
+		'\n'
+	) }`
+);
+
+const conflictingRenamedEntries = Object.entries( renamedTests )
+	.filter(
+		( [ baselinePath, currentPath ] ) =>
+			baselinePath === currentPath ||
+			addedTests.includes( baselinePath ) ||
+			addedTests.includes( currentPath ) ||
+			retiredTests.includes( baselinePath ) ||
+			retiredTests.includes( currentPath )
+	)
+	.map(
+		( [ baselinePath, currentPath ] ) =>
+			`${ baselinePath } -> ${ currentPath }`
+	);
+assert.deepEqual(
+	conflictingRenamedEntries,
+	[],
+	`Renamed tests must be distinct from added and retired tests:\n${ conflictingRenamedEntries.join(
 		'\n'
 	) }`
 );
@@ -161,6 +188,28 @@ assert.deepEqual(
 	invalidAddedTests,
 	[],
 	`Added tests do not exist:\n${ invalidAddedTests.join( '\n' ) }`
+);
+
+const invalidRenamedTests = Object.entries( renamedTests )
+	.filter(
+		( [ baselinePath, currentPath ] ) =>
+			existsSync( path.join( ROOT_DIR, baselinePath ) ) ||
+			! existsSync( path.join( ROOT_DIR, currentPath ) ) ||
+			jestTests.has( baselinePath ) ||
+			vitestTests.has( baselinePath ) ||
+			( ! jestTests.has( currentPath ) &&
+				! vitestTests.has( currentPath ) )
+	)
+	.map(
+		( [ baselinePath, currentPath ] ) =>
+			`${ baselinePath } -> ${ currentPath }`
+	);
+assert.deepEqual(
+	invalidRenamedTests,
+	[],
+	`Renamed tests must replace an absent baseline path with one discoverable current path:\n${ invalidRenamedTests.join(
+		'\n'
+	) }`
 );
 
 const activeRetiredTests = retiredTests.filter(
@@ -227,14 +276,18 @@ const accountedBaseline = [
 		...retiredTests,
 	] ),
 ].sort();
+const canonicalBaseline = canonicalizeRenamedTestFiles(
+	accountedBaseline,
+	renamedTests
+);
 
 assert.equal(
-	accountedBaseline.length,
+	canonicalBaseline.length,
 	manifest.baseline.count,
 	'The number of accounted baseline tests changed.'
 );
 assert.equal(
-	hashTestFiles( accountedBaseline ),
+	hashTestFiles( canonicalBaseline ),
 	manifest.baseline.sha256,
 	'The accounted baseline test file list changed.'
 );
@@ -270,5 +323,5 @@ assert.deepEqual(
 );
 
 console.log(
-	`Validated exactly one runner for ${ manifest.baseline.count } baseline tests: ${ jestTests.size } Jest, ${ vitestTests.size } Vitest, ${ retiredTests.length } retired, and ${ addedTests.length } added.`
+	`Validated exactly one runner for ${ manifest.baseline.count } baseline tests: ${ jestTests.size } Jest, ${ vitestTests.size } Vitest, ${ retiredTests.length } retired, ${ renamedBaselineTests.length } renamed, and ${ addedTests.length } added.`
 );
