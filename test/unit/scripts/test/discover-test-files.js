@@ -1,4 +1,11 @@
 /**
+ * Node dependencies
+ */
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+
+/**
  * External dependencies
  */
 import { describe, expect, test } from 'vitest';
@@ -8,7 +15,9 @@ import { describe, expect, test } from 'vitest';
  */
 import {
 	assertVitestProjectNames,
+	canonicalizeRenamedTestFiles,
 	findOverlappingVitestProjectTests,
+	getVitestTestsForProject,
 } from '../discover-test-files.mjs';
 import { hasTestEnvironmentOverride } from '../vitest-conventions.mjs';
 
@@ -57,6 +66,60 @@ describe( 'Vitest project routing', () => {
 		).toEqual( [
 			'packages/components/src/test/index.js: browser, jsdom',
 		] );
+	} );
+
+	test( 'preserves baseline identities for renamed tests', () => {
+		expect(
+			canonicalizeRenamedTestFiles(
+				[
+					'packages/example/src/test/unchanged.js',
+					'packages/example/src/test/renamed.jsx',
+				],
+				{
+					'packages/example/src/test/renamed.js':
+						'packages/example/src/test/renamed.jsx',
+				}
+			)
+		).toEqual( [
+			'packages/example/src/test/renamed.js',
+			'packages/example/src/test/unchanged.js',
+		] );
+	} );
+
+	test( 'excludes directory tests routed to another project', () => {
+		const rootDir = mkdtempSync(
+			path.join( tmpdir(), 'gutenberg-vitest-routing-' )
+		);
+		const testDirectory = path.join( rootDir, 'packages/example/src/test' );
+
+		try {
+			mkdirSync( testDirectory, { recursive: true } );
+			writeFileSync( path.join( testDirectory, 'browser.test.js' ), '' );
+			writeFileSync( path.join( testDirectory, 'jsdom.test.js' ), '' );
+
+			expect(
+				getVitestTestsForProject(
+					rootDir,
+					{
+						vitest: {
+							projects: {
+								jsdom: {
+									files: [],
+									directories: [ 'packages/example' ],
+									excludedFiles: [
+										'packages/example/src/test/browser.test.js',
+									],
+								},
+							},
+						},
+						added: { vitest: { jsdom: [] } },
+					},
+					'jsdom'
+				)
+			).toEqual( [ 'packages/example/src/test/jsdom.test.js' ] );
+		} finally {
+			rmSync( rootDir, { recursive: true } );
+		}
 	} );
 
 	test( 'detects per-file Vitest and Jest environment overrides', () => {

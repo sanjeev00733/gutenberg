@@ -93,12 +93,15 @@ export function discoverTestFiles( rootDir ) {
 export function getVitestTestsForProject( rootDir, manifest, projectName ) {
 	const discoveredTests = discoverTestFiles( rootDir );
 	const project = manifest.vitest.projects[ projectName ];
-	const directoryTests = discoveredTests.filter( ( testPath ) =>
-		project.directories.some(
-			( directoryPath ) =>
-				testPath === directoryPath ||
-				testPath.startsWith( `${ directoryPath }/` )
-		)
+	const excludedFiles = new Set( project.excludedFiles );
+	const directoryTests = discoveredTests.filter(
+		( testPath ) =>
+			! excludedFiles.has( testPath ) &&
+			project.directories.some(
+				( directoryPath ) =>
+					testPath === directoryPath ||
+					testPath.startsWith( `${ directoryPath }/` )
+			)
 	);
 
 	return [

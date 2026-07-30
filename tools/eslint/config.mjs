@@ -19,22 +19,30 @@ const wpPlugin = require( '@wordpress/eslint-plugin' );
 const testMigration = require(
 	join( rootDir, 'test/unit/test-migration.json' )
 );
+
+function getVitestProjectPatterns( projectName ) {
+	const project = testMigration.vitest.projects[ projectName ];
+	return [
+		...project.files,
+		...testMigration.added.vitest[ projectName ],
+		...project.directories.flatMap( ( directory ) => [
+			`${ directory }/**/__tests__/**/*.[jt]s?(x)`,
+			`${ directory }/**/test/*.[jt]s?(x)`,
+			`${ directory }/**/?(*.)test.[jt]s?(x)`,
+		] ),
+	];
+}
+
 const vitestTestPatterns = [
 	...new Set(
 		Object.keys( testMigration.vitest.projects ).flatMap(
-			( projectName ) => {
-				const project = testMigration.vitest.projects[ projectName ];
-				return [
-					...project.files,
-					...testMigration.added.vitest[ projectName ],
-					...project.directories.map(
-						( directory ) => `${ directory }/**/*.[tj]s?(x)`
-					),
-				];
-			}
+			getVitestProjectPatterns
 		)
 	),
 ];
+const vitestJsdomTestPatterns = getVitestProjectPatterns( 'jsdom' );
+const vitestJsdomTestIgnores =
+	testMigration.vitest.projects.jsdom.excludedFiles;
 
 // Prefer the installed React version for linting, but fall back to the detected version.
 let reactVersion = 'detect';
@@ -50,24 +58,26 @@ try {
  * of the same plugin name resolves to a single shared reference.
  *
  * @param {Object[]} configs Flat config array.
- * @return {Object[]} The same array with plugin references deduplicated.
+ * @return {Object[]} Configs with plugin references deduplicated.
  */
 function dedupePlugins( configs ) {
 	/** @type {Record<string,Object>} */
 	const seen = Object.create( null );
-	for ( const config of configs ) {
+	return configs.map( ( config ) => {
 		if ( ! config.plugins ) {
-			continue;
+			return config;
 		}
-		for ( const name of Object.keys( config.plugins ) ) {
+		const plugins = {};
+		for ( const [ name, plugin ] of Object.entries( config.plugins ) ) {
 			if ( name in seen ) {
-				config.plugins[ name ] = seen[ name ];
+				plugins[ name ] = seen[ name ];
 			} else {
-				seen[ name ] = config.plugins[ name ];
+				seen[ name ] = plugin;
+				plugins[ name ] = plugin;
 			}
 		}
-	}
-	return configs;
+		return { ...config, plugins };
+	} );
 }
 
 /**
@@ -452,6 +462,18 @@ export default dedupePlugins( [
 			'@wordpress/components-no-unsafe-button-disabled': 'error',
 			'@wordpress/components-no-missing-40px-size-prop': 'error',
 		},
+	},
+
+	// Override: Vitest files — runner-neutral jest-dom and Testing Library rules.
+	{
+		...jestDomPlugin.configs[ 'flat/recommended' ],
+		files: vitestJsdomTestPatterns,
+		ignores: vitestJsdomTestIgnores,
+	},
+	{
+		...testingLibraryPlugin.configs[ 'flat/react' ],
+		files: vitestJsdomTestPatterns,
+		ignores: vitestJsdomTestIgnores,
 	},
 
 	// Override: Jest test files (unit tests).
