@@ -10,6 +10,7 @@
 	"retired": [],
 	"added": {
 		"jest": [
+			"packages/wp-build/lib/test/source-files.js",
 			"packages/ui/src/form/primitives/searchable-chip-select/test/index.test.tsx",
 			"tools/agents/test/setup-skills.test.js"
 		],
