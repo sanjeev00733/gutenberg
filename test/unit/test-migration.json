@@ -28,7 +28,7 @@
 			"tools/agents/test/setup-skills.test.js"
 		],
 		"vitest": {
-			"browser": [],
+			"browser": [ "test/unit/browser/components.vitest.test.tsx" ],
 			"jsdom": [
 				"test/unit/config/console.vitest.test.js",
 				"test/unit/config/emotion-serializer.vitest.test.jsx",
