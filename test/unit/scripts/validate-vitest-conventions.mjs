@@ -1,11 +1,4 @@
 /**
- * External dependencies
- */
-import { parseSync } from '@babel/core';
-import traverseModule from '@babel/traverse';
-import globPackage from 'glob';
-
-/**
  * Node dependencies
  */
 import { execFileSync } from 'node:child_process';
@@ -19,6 +12,13 @@ import {
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+/**
+ * External dependencies
+ */
+import { parseSync } from '@babel/core';
+import traverseModule from '@babel/traverse';
+import globPackage from 'glob';
 
 /**
  * Internal dependencies
