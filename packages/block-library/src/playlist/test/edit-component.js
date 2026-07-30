@@ -13,13 +13,22 @@ import { useDispatch, useSelect } from '@wordpress/data';
  */
 import PlaylistEdit from '../edit';
 
+let mediaPlaceholderProps;
+let mediaReplaceFlowProps;
+
 jest.mock( '@wordpress/block-editor', () => ( {
 	store: {},
 	BlockControls: ( { children } ) => <div>{ children }</div>,
 	BlockIcon: () => <span />,
 	InspectorControls: ( { children } ) => <div>{ children }</div>,
-	MediaPlaceholder: () => <div />,
-	MediaReplaceFlow: () => <div />,
+	MediaPlaceholder: ( props ) => {
+		mediaPlaceholderProps = props;
+		return <div />;
+	},
+	MediaReplaceFlow: ( props ) => {
+		mediaReplaceFlowProps = props;
+		return <div />;
+	},
 	useBlockProps: () => ( { className: 'wp-block-playlist' } ),
 	useInnerBlocksProps: ( blockProps ) => ( {
 		...blockProps,
@@ -96,6 +105,8 @@ const defaultAttributes = {
 
 describe( 'PlaylistEdit', () => {
 	beforeEach( () => {
+		mediaPlaceholderProps = undefined;
+		mediaReplaceFlowProps = undefined;
 		useDispatch.mockReturnValue( {
 			createErrorNotice: jest.fn(),
 			replaceInnerBlocks: jest.fn(),
@@ -113,6 +124,38 @@ describe( 'PlaylistEdit', () => {
 				},
 			],
 		} );
+	} );
+
+	it( 'lets users select audio tracks individually from the Media Library', () => {
+		useSelect.mockReturnValue( {
+			innerBlockTracks: [],
+		} );
+
+		render(
+			<PlaylistEdit
+				attributes={ defaultAttributes }
+				clientId="playlist-1"
+				insertBlocksAfter={ jest.fn() }
+				isSelected={ false }
+				setAttributes={ jest.fn() }
+			/>
+		);
+
+		expect( mediaPlaceholderProps.multiple ).toBe( 'add' );
+	} );
+
+	it( 'lets users select additional audio tracks individually from the Media Library', () => {
+		render(
+			<PlaylistEdit
+				attributes={ defaultAttributes }
+				clientId="playlist-1"
+				insertBlocksAfter={ jest.fn() }
+				isSelected={ false }
+				setAttributes={ jest.fn() }
+			/>
+		);
+
+		expect( mediaReplaceFlowProps.multiple ).toBe( 'add' );
 	} );
 
 	it( 'keeps track blocks mounted when the tracklist is hidden', () => {

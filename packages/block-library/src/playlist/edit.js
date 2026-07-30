@@ -472,7 +472,7 @@ const PlaylistEdit = ( {
 					} }
 					onSelect={ onSelectTracks }
 					accept="audio/*"
-					multiple
+					multiple="add"
 					handleUpload={ false }
 					allowedTypes={ ALLOWED_MEDIA_TYPES }
 					onError={ onUploadError }
@@ -488,7 +488,7 @@ const PlaylistEdit = ( {
 					name={ __( 'Add' ) }
 					onSelect={ onAddTracks }
 					accept="audio/*"
-					multiple
+					multiple="add"
 					handleUpload={ false }
 					allowedTypes={ ALLOWED_MEDIA_TYPES }
 					onError={ onUploadError }
@@ -683,7 +683,7 @@ const PlaylistEdit = ( {
 				<MediaPlaceholder
 					onSelect={ onAddTracks }
 					accept="audio/*"
-					multiple
+					multiple="add"
 					handleUpload={ false }
 					disableMediaButtons
 					allowedTypes={ ALLOWED_MEDIA_TYPES }
