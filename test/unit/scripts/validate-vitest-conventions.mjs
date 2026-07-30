@@ -26,7 +26,7 @@ import {
 	getVitestTests,
 	getVitestTestsByProject,
 	VITEST_PROJECT_NAMES,
-} from './discover-test-files.mjs';
+} from './test-projects.mjs';
 import { hasTestEnvironmentOverride } from './vitest-conventions.mjs';
 
 const { sync: glob } = globPackage;
@@ -34,14 +34,8 @@ const ROOT_DIR = path.resolve(
 	path.dirname( fileURLToPath( import.meta.url ) ),
 	'../../..'
 );
-const migration = JSON.parse(
-	readFileSync(
-		path.join( ROOT_DIR, 'test/unit/test-migration.json' ),
-		'utf8'
-	)
-);
-const vitestTestsByProject = getVitestTestsByProject( ROOT_DIR, migration );
-const vitestTests = getVitestTests( ROOT_DIR, migration );
+const vitestTestsByProject = getVitestTestsByProject( ROOT_DIR );
+const vitestTests = getVitestTests( ROOT_DIR );
 const vitestInfrastructure = [
 	'test/unit/vitest.config.mjs',
 	...glob( 'test/unit/config/**/*.vitest.{js,jsx,mjs,ts,tsx}', {
