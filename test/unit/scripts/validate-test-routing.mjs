@@ -124,8 +124,7 @@ const jestTests = listTests( 'jest', [
 const vitestTestsByProject = Object.fromEntries(
 	VITEST_PROJECT_NAMES.map( ( projectName ) => [
 		projectName,
-		existsSync( path.join( ROOT_DIR, VITEST_CONFIG ) ) &&
-		expectedVitestTestsByProject[ projectName ].length > 0
+		existsSync( path.join( ROOT_DIR, VITEST_CONFIG ) )
 			? listTests( 'vitest', [
 					'list',
 					'--config',
@@ -133,6 +132,7 @@ const vitestTestsByProject = Object.fromEntries(
 					'--project',
 					VITEST_CONFIG_PROJECT_NAMES[ projectName ],
 					'--filesOnly',
+					'--passWithNoTests',
 			  ] )
 			: new Set(),
 	] )

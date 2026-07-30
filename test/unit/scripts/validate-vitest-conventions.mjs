@@ -28,6 +28,7 @@ import {
 	getVitestTestsByProject,
 	VITEST_PROJECT_NAMES,
 } from './discover-test-files.mjs';
+import { hasTestEnvironmentOverride } from './vitest-conventions.mjs';
 
 const traverse = traverseModule.default ?? traverseModule;
 const { sync: glob } = globPackage;
@@ -198,6 +199,15 @@ for ( const file of files ) {
 		/(?:from\s+|import\s*)[('"]vitest\/globals/.test( source )
 	) {
 		violations.push( `${ file }: vitest/globals is not allowed` );
+	}
+
+	if (
+		vitestTests.includes( file ) &&
+		hasTestEnvironmentOverride( source )
+	) {
+		violations.push(
+			`${ file }: per-file test environment overrides are not allowed`
+		);
 	}
 }
 
