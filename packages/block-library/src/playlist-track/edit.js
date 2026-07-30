@@ -169,7 +169,7 @@ const PlaylistTrackEdit = ( {
 						name={ __( 'Add' ) }
 						onSelect={ addTracks }
 						accept="audio/*"
-						multiple
+						multiple="add"
 						handleUpload={ false }
 						allowedTypes={ ALLOWED_MEDIA_TYPES }
 						onError={ onUploadError }

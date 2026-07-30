@@ -221,6 +221,13 @@ describe( 'PlaylistTrackEdit', () => {
 		).toBeInTheDocument();
 	} );
 
+	it( 'lets users select additional audio tracks individually from the Media Library', () => {
+		renderEdit( { addTracks: jest.fn() } );
+
+		expect( mockMediaReplaceFlowProps.name ).toBe( 'Add' );
+		expect( mockMediaReplaceFlowProps.multiple ).toBe( 'add' );
+	} );
+
 	it( 'preserves the current track source when a replacement upload fails', () => {
 		const { setAttributes } = renderEdit();
 
