@@ -337,6 +337,9 @@
 			],
 			"node": [
 				"packages/wp-build/lib/test/source-files.js",
+				"packages/vitest-console/test/index.test.js",
+				"packages/vitest-preset-default/test/index.test.js",
+				"packages/vitest-preset-default/test/style-mock.test.js",
 				"test/unit/scripts/test/discover-test-files.js",
 				"test/unit/scripts/test/vite-block-metadata.vitest.test.js",
 				"tools/agents/test/setup-skills.test.js"
