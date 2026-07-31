@@ -1,0 +1,1 @@
+import{f as e}from"./useRenderElement-DjFsYe1U.js";import{r as o}from"./iframe-DxsDnhyK.js";const t=o.createContext(void 0);function useCheckboxGroupContext(r=!0){const n=o.useContext(t);if(void 0===n&&!r)throw new Error(e(3));return n}export{useCheckboxGroupContext as u};
